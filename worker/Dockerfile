@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY backend/app ./app
-COPY backend/scripts/run-worker.sh ./run-worker.sh
+COPY scripts/run-worker.sh ./run-worker.sh
 
 RUN chmod +x /app/run-worker.sh && mkdir -p /mnt/uploads
 

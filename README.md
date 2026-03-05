@@ -144,8 +144,8 @@ This starts:
 
 1. **Backend & worker** (from `backend/`):
    - MongoDB and Valkey running (e.g. via `docker compose up mongo valkey -d`).
-   - API: `./scripts/run-api.sh` (or `uvicorn app.server:app --reload`)
-   - Worker: `./scripts/run-worker.sh`
+   - API: from `backend/` run `uvicorn app.server:app --reload` (or from repo root: `cd backend && ../scripts/run-api.sh`)
+   - Worker: from `backend/` run `python -m app.worker` (or from repo root: `cd backend && ../scripts/run-worker.sh`)
 
 2. **Frontend** (from `frontend/`):
    - `npm install && npm run dev` (Vite proxies `/api` to backend if backend is on port 8000).
@@ -192,8 +192,8 @@ That method blocks forever and keeps polling Valkey for new jobs.
 ## Files You Should Know First
 
 ### Runtime entrypoints
-- [scripts/run-api.sh](backend/scripts/run-api.sh)
-- [scripts/run-worker.sh](backend/scripts/run-worker.sh)
+- [scripts/run-api.sh](scripts/run-api.sh)
+- [scripts/run-worker.sh](scripts/run-worker.sh)
 
 ### Makefile helpers
 For common docker-compose workflows you can also use the `Makefile`:

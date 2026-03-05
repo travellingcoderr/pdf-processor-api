@@ -1,8 +1,8 @@
 services:
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     image: pdf-processor-api
     container_name: pdf-processor-api
     command: ./run-api.sh
