@@ -35,7 +35,8 @@ Build context is repo root (so the Dockerfile can `COPY backend/...` and `script
 | **Root Directory** | `frontend` |
 | **Start Command** | *(leave default)* — the frontend Dockerfile runs `nginx` to serve the built static files. |
 
-If you use the **Dockerfile** (recommended), you don’t need a custom start command.  
+The repo includes `frontend/railway.json` so Railway uses the **Dockerfile** builder instead of Railpack (avoids "Error creating build plan with Railpack" in monorepos).  
+If you use the Dockerfile (recommended), you don’t need a custom start command.  
 If you use a **Node buildpack** instead of Docker, use: `npm run build && npx serve -s dist -l ${PORT:-3000}` (and set build command to `npm install && npm run build`).
 
 ---
