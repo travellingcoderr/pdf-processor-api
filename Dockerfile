@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends poppler-utils gcc && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY app ./app
+COPY scripts/run-api.sh ./run-api.sh
+COPY scripts/run-worker.sh ./run-worker.sh
+
+RUN chmod +x /app/run-api.sh /app/run-worker.sh && mkdir -p /mnt/uploads
+
+EXPOSE 8000
