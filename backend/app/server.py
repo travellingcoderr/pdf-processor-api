@@ -7,6 +7,7 @@ from .db.collections.files import files_collection, FileSchema
 from .queue.q import q
 from .queue.workers import process_file_job
 from bson import ObjectId
+from bson.errors import InvalidId
 
 app = FastAPI()
 
@@ -26,7 +27,11 @@ def hello():
 
 @app.get("/{id}")
 async def get_file_by_id(id: str = Path(..., description="ID of the file")):
-    db_file = await files_collection.find_one({"_id": ObjectId(id)})
+    try:
+        oid = ObjectId(id)
+    except InvalidId:
+        raise HTTPException(status_code=404, detail="File not found")
+    db_file = await files_collection.find_one({"_id": oid})
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
 
