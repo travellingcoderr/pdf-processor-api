@@ -1,13 +1,15 @@
 # PDF-processor
 
 ## What This Project Is
-This project is an asynchronous PDF-processing service.
+This project is an asynchronous PDF-processing service with a **multi-service** layout:
 
-It is built from four moving parts:
+- **frontend/** – React (Vite) UI that uploads PDFs and shows status/result via the backend API
+- **backend/** – FastAPI server: accepts uploads and exposes status/result endpoints
+- **worker/** – RQ worker image (uses backend app code): long-running process that processes queued jobs
 
-- **API server**: accepts uploads and exposes status/result endpoints
+Shared infrastructure (same for all):
+
 - **Valkey/Redis**: stores queued jobs
-- **RQ worker**: a long-running background process that listens for jobs and processes them
 - **MongoDB**: stores file metadata, status, and final result
 
 This is **not a full RAG system** right now.
@@ -70,7 +72,7 @@ Route:
 
 Code:
 
-- [server.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/server.py)
+- [server.py](backend/app/server.py)
 
 Flow:
 
@@ -83,8 +85,8 @@ Flow:
 ### 2. Worker picks up the job
 Code:
 
-- [worker.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/worker.py)
-- [workers.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/queue/workers.py)
+- [worker.py](backend/app/worker.py)
+- [workers.py](backend/app/queue/workers.py)
 
 How it works:
 
@@ -122,40 +124,31 @@ Inside `_process_file_async(...)`:
 ## How the Worker Is Actually Run
 There are now two ways.
 
-### Docker Compose
-Recommended:
+### Docker Compose (recommended)
+
+From the repo root:
 
 ```bash
-cd /Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor
+cp .env.example .env   # edit .env with OPENAI_API_KEY etc.
 docker compose up --build
 ```
 
 This starts:
 
-- `api`
-- `worker`
-- `mongo`
-- `valkey`
+- **api** – backend on http://localhost:8000
+- **worker** – RQ worker
+- **frontend** – UI on http://localhost:80 (or http://localhost)
+- **mongo**, **valkey**
 
-### Local manual processes
-If you want to run things by hand, you need four processes/services:
+### Local development (without Docker)
 
-1. MongoDB
-2. Valkey/Redis
-3. API server
-4. Worker process
+1. **Backend & worker** (from `backend/`):
+   - MongoDB and Valkey running (e.g. via `docker compose up mongo valkey -d`).
+   - API: `./scripts/run-api.sh` (or `uvicorn app.server:app --reload`)
+   - Worker: `./scripts/run-worker.sh`
 
-API:
-
-```bash
-./scripts/run-api.sh
-```
-
-Worker:
-
-```bash
-./scripts/run-worker.sh
-```
+2. **Frontend** (from `frontend/`):
+   - `npm install && npm run dev` (Vite proxies `/api` to backend if backend is on port 8000).
 
 ## How Mongo and RQ Are Started
 
@@ -164,14 +157,14 @@ Mongo is started by Docker Compose using the `mongo:7` image.
 
 Defined in:
 
-- [docker-compose.yml](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/docker-compose.yml)
+- [docker-compose.yml](docker-compose.yml)
 
 ### Valkey
 Valkey is also started by Docker Compose using the `valkey/valkey:8` image.
 
 Defined in:
 
-- [docker-compose.yml](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/docker-compose.yml)
+- [docker-compose.yml](docker-compose.yml)
 
 ### RQ
 RQ is not started as its own infrastructure container.
@@ -199,9 +192,8 @@ That method blocks forever and keeps polling Valkey for new jobs.
 ## Files You Should Know First
 
 ### Runtime entrypoints
-- [scripts/run.sh](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/scripts/run.sh)
-- [scripts/run-api.sh](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/scripts/run-api.sh)
-- [scripts/run-worker.sh](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/scripts/run-worker.sh)
+- [scripts/run-api.sh](backend/scripts/run-api.sh)
+- [scripts/run-worker.sh](backend/scripts/run-worker.sh)
 
 ### Makefile helpers
 For common docker-compose workflows you can also use the `Makefile`:
@@ -212,25 +204,24 @@ make down     # docker compose down
 make restart  # restart the stack
 ```
 
-### App server
-- [server.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/server.py)
-- [main.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/main.py)
+### App server (backend)
+- [server.py](backend/app/server.py)
+- [main.py](backend/app/main.py)
 
 ### Queue runtime
-- [q.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/queue/q.py)
-- [workers.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/queue/workers.py)
-- [worker.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/worker.py)
+- [q.py](backend/app/queue/q.py)
+- [workers.py](backend/app/queue/workers.py)
+- [worker.py](backend/app/worker.py)
 
 ### Database
-- [client.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/db/client.py)
-- [db.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/db/db.py)
-- [files.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/db/collections/files.py)
+- [client.py](backend/app/db/client.py)
+- [db.py](backend/app/db/db.py)
+- [files.py](backend/app/db/collections/files.py)
 
 ### Config and infra
-- [config.py](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/app/config.py)
-- [Dockerfile](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/Dockerfile)
-- [docker-compose.yml](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/docker-compose.yml)
-- [.env.example](/Users/works/Desktop/@sathish/ai_projects/gen-ai-projects/PDF-processor/.env.example)
+- `backend/app/config.py`
+- `backend/Dockerfile`, `worker/Dockerfile`, `frontend/Dockerfile`
+- `docker-compose.yml`, root `.env` / `.env.example`
 
 ## Environment Variables
 Copy `.env.example` to `.env` and fill in the OpenAI key.
@@ -278,14 +269,25 @@ Example shape:
 }
 ```
 
-## Container Topology
+## Project layout (multi-service)
 
 ```text
-PDF-processor/
-├── api      -> FastAPI server
-├── worker   -> RQ worker loop
-├── mongo    -> metadata/result store
-└── valkey   -> queue backend
+pdf-processor-api/
+├── frontend/       # React UI (Vite), calls backend API
+├── backend/        # FastAPI app + shared app code
+├── worker/         # Dockerfile only; image uses backend app, runs RQ worker
+├── docker-compose.yml   # api, worker, frontend, mongo, valkey
+└── .env / .env.example
+```
+
+## Container topology
+
+```text
+api       -> backend image (FastAPI)
+worker    -> worker image (RQ worker, same app as backend)
+frontend  -> serves UI; /api/* proxied to api:8000
+mongo     -> metadata/result store
+valkey    -> queue backend
 ```
 
 ## Important Notes

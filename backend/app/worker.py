@@ -5,7 +5,6 @@ from app.queue.q import redis_connection
 
 
 def main() -> None:
-    # RQ worker blocks forever, polling Redis/Valkey for new jobs on the named queue.
     worker = Worker([RQ_QUEUE_NAME], connection=redis_connection)
     worker.work()
 

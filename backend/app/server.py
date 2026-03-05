@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, Path
 from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from app.config import UPLOAD_ROOT
 from .utils.file import save_to_disk
 from .db.collections.files import files_collection, FileSchema
@@ -8,6 +9,14 @@ from .queue.workers import process_file_job
 from bson import ObjectId
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")

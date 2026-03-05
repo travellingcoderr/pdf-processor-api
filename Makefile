@@ -1,4 +1,4 @@
-.PHONY: up down restart logs-api logs-worker freeze env
+.PHONY: up down restart logs-api logs-worker logs-frontend env
 
 up:
 	docker compose up --build
@@ -14,8 +14,8 @@ logs-api:
 logs-worker:
 	docker compose logs -f worker
 
-freeze:
-	./scripts/freeze.sh
+logs-frontend:
+	docker compose logs -f frontend
 
 env:
 	@if [ -f .env ]; then \

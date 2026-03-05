@@ -1,8 +1,10 @@
 services:
   api:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
+    image: pdf-processor-api
+    container_name: pdf-processor-api
     command: ./run-api.sh
     ports:
       - "8000:8000"
@@ -13,25 +15,37 @@ services:
       - valkey
     volumes:
       - uploads_data:/mnt/uploads
-      - ./app:/app/app
 
   worker:
     build:
       context: .
-      dockerfile: Dockerfile
-    command: ./run-worker.sh
+      dockerfile: worker/Dockerfile
+    image: pdf-processor-worker
+    container_name: pdf-processor-worker
     env_file:
       - .env
     depends_on:
       - mongo
       - valkey
+      - api
     volumes:
       - uploads_data:/mnt/uploads
-      - ./app:/app/app
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: pdf-processor-frontend
+    container_name: pdf-processor-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
 
   mongo:
     image: mongo:7
     restart: unless-stopped
+    container_name: pdf-processor-mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
@@ -43,6 +57,7 @@ services:
   valkey:
     image: valkey/valkey:8
     restart: unless-stopped
+    container_name: pdf-processor-valkey
     ports:
       - "6379:6379"
     volumes:

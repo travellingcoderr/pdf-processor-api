@@ -20,3 +20,4 @@ COPY scripts/run-worker.sh ./run-worker.sh
 RUN chmod +x /app/run-api.sh /app/run-worker.sh && mkdir -p /mnt/uploads
 
 EXPOSE 8000
+CMD ["./run-api.sh"]
