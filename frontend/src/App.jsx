@@ -2,23 +2,41 @@ import { useState, useCallback } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
+function wrapFetchError(err, url) {
+  if (err instanceof TypeError && err.message === 'Failed to fetch') {
+    return new Error(
+      `Network error: cannot reach API at ${url}. Check that the backend is running and VITE_API_URL (or /api proxy) is correct.`
+    )
+  }
+  return err
+}
+
 async function uploadFile(file) {
-  const formData = new FormData()
-  formData.append('file', file)
-  const res = await fetch(`${API_BASE}/upload`, {
-    method: 'POST',
-    body: formData,
-  })
+  const url = `${API_BASE}/upload`
+  let res
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    res = await fetch(url, { method: 'POST', body: formData })
+  } catch (err) {
+    throw wrapFetchError(err, url)
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.detail || res.statusText || 'Upload failed')
+    throw new Error(err.detail || res.statusText || `Upload failed (${res.status})`)
   }
   return res.json()
 }
 
 async function getFileStatus(id) {
-  const res = await fetch(`${API_BASE}/${id}`)
-  if (!res.ok) throw new Error('Failed to fetch status')
+  const url = `${API_BASE}/${id}`
+  let res
+  try {
+    res = await fetch(url)
+  } catch (err) {
+    throw wrapFetchError(err, url)
+  }
+  if (!res.ok) throw new Error(`Failed to fetch status (${res.status})`)
   return res.json()
 }
 

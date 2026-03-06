@@ -3,6 +3,8 @@ import os
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://admin:admin@mongo:27017")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "mydb")
+# Set to 1/true only if Atlas SSL handshake still fails (e.g. on Railway); not for production long-term
+MONGO_TLS_INSECURE = os.getenv("MONGO_TLS_INSECURE", "").lower() in ("1", "true", "yes")
 # Use REDIS_URL (e.g. Upstash: rediss://default:password@host:port) or REDIS_HOST + REDIS_PORT
 REDIS_URL = os.getenv("REDIS_URL", "")
 REDIS_HOST = os.getenv("REDIS_HOST", "valkey")

@@ -1,8 +1,11 @@
 import asyncio
 import base64
+import logging
 import os
 
 from bson import ObjectId
+
+logger = logging.getLogger(__name__)
 from openai import OpenAI
 from pdf2image import convert_from_path
 
@@ -83,4 +86,10 @@ def process_file_job(file_id: str, file_path: str) -> None:
     RQ workers call normal Python functions. This wrapper starts an event loop and
     runs the async Mongo/document pipeline inside it.
     """
-    asyncio.run(_process_file_async(file_id, file_path))
+    logger.info("Job started: file_id=%s", file_id)
+    try:
+        asyncio.run(_process_file_async(file_id, file_path))
+        logger.info("Job finished: file_id=%s", file_id)
+    except Exception as exc:
+        logger.exception("Job failed: file_id=%s error=%s", file_id, exc)
+        raise
