@@ -35,10 +35,14 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
     image: pdf-processor-frontend
     container_name: pdf-processor-frontend
+    environment:
+      PORT: 3000
     ports:
-      - "80:80"
+      - "80:3000"
     depends_on:
       - api
 
