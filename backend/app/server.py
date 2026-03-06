@@ -1,9 +1,10 @@
+import asyncio
+
 from fastapi import FastAPI, UploadFile, Path
 from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import UPLOAD_ROOT
-from .utils.file import save_to_disk
 from .db.collections.files import files_collection, FileSchema
+from .db.gridfs_store import put_file
 from .queue.q import q
 from .queue.workers import process_file_job
 from bson import ObjectId
@@ -47,23 +48,23 @@ async def get_file_by_id(id: str = Path(..., description="ID of the file")):
 async def upload_file(
     file: UploadFile
 ):
-
     db_file = await files_collection.insert_one(
         document=FileSchema(name=file.filename, status="saving")
     )
+    file_id = str(db_file.inserted_id)
+    file_bytes = await file.read()
 
-    file_path = f"{UPLOAD_ROOT}/{str(db_file.inserted_id)}/{file.filename}"
+    # Store PDF in GridFS so worker (different container) can read it
+    loop = asyncio.get_event_loop()
+    gridfs_id = await loop.run_in_executor(
+        None, lambda: put_file(file_bytes, file.filename or "document.pdf")
+    )
 
-    await save_to_disk(file=await file.read(), path=file_path)
+    q.enqueue(process_file_job, file_id, str(gridfs_id))
 
-    # Push to Queue
-    q.enqueue(process_file_job, str(db_file.inserted_id), file_path)
+    await files_collection.update_one(
+        {"_id": db_file.inserted_id},
+        {"$set": {"status": "queued"}},
+    )
 
-    # MongoDB Save
-    await files_collection.update_one({"_id": db_file.inserted_id}, {
-        "$set": {
-            "status": "queued"
-        }
-    })
-
-    return {"file_id": str(db_file.inserted_id)}
+    return {"file_id": file_id}

@@ -23,8 +23,9 @@ Build context is repo root (so the Dockerfile can `COPY backend/...` and `script
 | **Root Directory** | *(repo root)* |
 | **Dockerfile path** | `worker/Dockerfile` |
 | **Start Command** | `./run-worker.sh` or `python -m app.worker` |
+| **Variable** | `UPLOAD_ROOT=/tmp` (worker has no shared disk; PDFs come from GridFS, images go under this path) |
 
-Build context is repo root (so the Dockerfile can `COPY backend/...` and `scripts/...`).
+Build context is repo root (so the Dockerfile can `COPY backend/...` and `scripts/...`). PDFs are stored in MongoDB GridFS so the worker can read them without a shared volume.
 
 ---
 
