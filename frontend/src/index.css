@@ -21,11 +21,18 @@ body {
   padding: 2rem;
 }
 
-h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
+.app-title {
+  font-size: 1.85rem;
+  font-weight: 700;
   margin: 0 0 0.5rem;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.app-title .wink {
+  font-size: 1.5rem;
 }
 
 .subtitle {
@@ -63,6 +70,12 @@ h1 {
   margin: 0.5rem 0 0;
   font-size: 0.875rem;
   color: #666;
+}
+
+.upload-hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.25rem;
 }
 
 .btn {
@@ -148,4 +161,61 @@ h1 {
 .loading {
   color: #666;
   font-size: 0.9rem;
+}
+
+/* Roasting-in-progress state */
+.roasting-state {
+  text-align: center;
+  padding: 1.25rem 0.5rem;
+}
+
+.roasting-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.roasting-emoji .roast-doc {
+  animation: roast-wiggle 1.2s ease-in-out infinite;
+}
+
+.roasting-emoji .roast-arrow {
+  opacity: 0.7;
+  animation: roast-pulse 0.8s ease-in-out infinite;
+}
+
+.roasting-emoji .roast-fire {
+  animation: roast-flame 1s ease-in-out infinite;
+}
+
+@keyframes roast-wiggle {
+  0%, 100% { transform: rotate(-3deg) scale(1); }
+  50% { transform: rotate(3deg) scale(1.05); }
+}
+
+@keyframes roast-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes roast-flame {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.15); filter: brightness(1.2); }
+}
+
+.roasting-text {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.roasting-sub {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+  font-style: italic;
 }

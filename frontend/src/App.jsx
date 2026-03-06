@@ -2,6 +2,17 @@ import { useState, useCallback } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
+const ACCEPT_RESUME = '.pdf,.docx'
+const ACCEPT_MIME = 'application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+const ALLOWED_TYPES = new Set([
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
+
+function isAllowedFile(file) {
+  return file && (ALLOWED_TYPES.has(file.type) || /\.(pdf|docx)$/i.test(file.name))
+}
+
 function wrapFetchError(err, url) {
   if (err instanceof TypeError && err.message === 'Failed to fetch') {
     return new Error(
@@ -59,9 +70,14 @@ export default function App() {
   const handleUpload = async (e) => {
     const f = e?.target?.files?.[0] ?? file
     if (!f) return
+    if (!isAllowedFile(f)) {
+      setError('Please upload a PDF or Word (.docx) resume only.')
+      return
+    }
     setError(null)
     setLoading(true)
     setStatus(null)
+    setFileId(null)
     try {
       const { file_id } = await uploadFile(f)
       setFileId(file_id)
@@ -73,15 +89,32 @@ export default function App() {
     }
   }
 
+  const isRoasting = fileId && (!status || (status.status !== 'processed' && status.status !== 'failed'))
+
+  const setFileIfAllowed = (f) => {
+    if (!f) {
+      setFile(null)
+      setFileId(null)
+      setStatus(null)
+      setError(null)
+      return
+    }
+    if (!isAllowedFile(f)) {
+      setError('Only PDF or Word (.docx) resumes are accepted.')
+      setFile(null)
+      return
+    }
+    setError(null)
+    setFile(f)
+    setFileId(null)
+    setStatus(null)
+  }
+
   const onDrop = (e) => {
     e.preventDefault()
     setDragover(false)
     const f = e.dataTransfer.files?.[0]
-    if (f?.type === 'application/pdf') {
-      setFile(f)
-      setFileId(null)
-      setStatus(null)
-    }
+    setFileIfAllowed(f)
   }
 
   const onDragOver = (e) => {
@@ -93,8 +126,12 @@ export default function App() {
 
   return (
     <>
-      <h1>PDF Processor</h1>
-      <p className="subtitle">Upload a PDF to process it with the backend API.</p>
+      <h1 className="app-title">
+        Resume Roaster <span className="wink" aria-hidden>😉</span>
+      </h1>
+      <p className="subtitle">
+        Drop your resume (PDF or Word). We’ll roast it.
+      </p>
 
       <div
         className={`upload-zone ${dragover ? 'dragover' : ''}`}
@@ -104,18 +141,14 @@ export default function App() {
       >
         <input
           type="file"
-          id="pdf-input"
-          accept="application/pdf"
-          onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null)
-            setFileId(null)
-            setStatus(null)
-          }}
+          id="resume-input"
+          accept={ACCEPT_MIME}
+          onChange={(e) => setFileIfAllowed(e.target.files?.[0] ?? null)}
         />
-        <label htmlFor="pdf-input">
-          {file ? file.name : 'Choose a PDF or drop it here'}
+        <label htmlFor="resume-input">
+          {file ? file.name : 'Choose a resume or drop it here'}
         </label>
-        <p>Only PDF files are accepted.</p>
+        <p className="upload-hint">PDF or Word (.docx) only. Word files are converted to PDF automatically.</p>
         <p style={{ marginTop: '1rem' }}>
           <button
             type="button"
@@ -123,7 +156,7 @@ export default function App() {
             disabled={!file || loading}
             onClick={() => handleUpload()}
           >
-            {loading ? 'Uploading…' : 'Upload & process'}
+            {loading ? 'Roasting…' : 'Roast my resume'}
           </button>
         </p>
       </div>
@@ -132,18 +165,26 @@ export default function App() {
 
       {fileId && (
         <div className="result-card">
-          <h3>File</h3>
+          <h3>Your roast</h3>
           <div className="file-id">{fileId}</div>
-          {status ? (
+          {isRoasting ? (
+            <div className="roasting-state" aria-live="polite">
+              <div className="roasting-emoji" aria-hidden>
+                <span className="roast-doc">📄</span>
+                <span className="roast-arrow">→</span>
+                <span className="roast-fire">🔥</span>
+              </div>
+              <p className="roasting-text">Your resume is in the oven…</p>
+              <p className="roasting-sub">Our chefs are reading every line. No pressure.</p>
+            </div>
+          ) : status ? (
             <>
               <span className={`status ${status.status}`}>{status.status}</span>
               {status.result != null && (
                 <div className="result-text">{status.result}</div>
               )}
             </>
-          ) : (
-            <p className="loading">Loading status…</p>
-          )}
+          ) : null}
         </div>
       )}
     </>

@@ -9,6 +9,7 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
+        libreoffice \
         poppler-utils \
         gcc && \
     update-ca-certificates && \
