@@ -18,8 +18,10 @@ FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY frontend/nginx-default.conf.template /etc/nginx/conf.d/default.conf.template
+COPY frontend/nginx.conf /tmp/nginx.conf
 COPY frontend/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh && rm -f /etc/nginx/conf.d/default.conf
+RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
-CMD ["/docker-entrypoint.sh"]
+# Run with sh so shebang/CRLF and exec work reliably on Railway
+CMD ["sh", "/docker-entrypoint.sh"]
